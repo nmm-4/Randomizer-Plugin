@@ -1,6 +1,7 @@
 package com.nmm.code.randomizer;
 
 import org.bukkit.Material;
+import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
@@ -26,25 +27,28 @@ public final class Randomizer extends JavaPlugin implements Listener {
         List<Material> dropMaterials = Arrays.stream(Material.values())
                 .filter(Material::isItem)
                 .filter(m -> m != Material.AIR)
-                .filter(m -> !m.name().endsWith("_SPAWN_EGG"))
                 .toList();
 
         for (Material block : blockMaterials) {
             Material drop = dropMaterials.get(rand.nextInt(dropMaterials.size()));
-            int amount = rand.nextInt(5) + 1;
+            int amount = rand.nextInt(3) + 1;
+            amount = Math.min(amount, drop.getMaxStackSize());
             drops.put(block, new ItemStack(drop, amount));
         }
 
         Material[] mustHave = {
                 Material.ENDER_PEARL,
+                Material.ENDER_EYE,
                 Material.BLAZE_ROD,
                 Material.BLAZE_POWDER,
                 Material.CARVED_PUMPKIN
         };
-
-        for (Material m : mustHave) {
-            Material block = blockMaterials.get(rand.nextInt(blockMaterials.size()));
-            drops.put(block, new ItemStack(m, rand.nextInt(3) + 1));
+        for (int i = 0; i < 2; i++) {
+            for (Material m : mustHave) {
+                Material block = blockMaterials.get(rand.nextInt(blockMaterials.size()));
+                drops.put(block, new ItemStack(m,1));
+                System.out.println(block);
+            }
         }
     }
 
@@ -53,11 +57,11 @@ public final class Randomizer extends JavaPlugin implements Listener {
         e.setDropItems(false);
 
         ItemStack drop = drops.get(e.getBlock().getType());
-        if (drop != null) {
-            e.getBlock().getWorld().dropItemNaturally(
-                    e.getBlock().getLocation(),
-                    drop.clone()
-            );
-        }
+        if (drop == null) return;
+
+
+        e.getBlock().getWorld().dropItem(
+                e.getBlock().getLocation(), drop
+        );
     }
 }
